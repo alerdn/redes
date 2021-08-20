@@ -4,6 +4,7 @@
 float a(double t, int r, int k);
 float b(double t, int r, int p, int k);
 float c(double t, int r, int p, int k);
+float d(double t, int r, int p, int k);
 
 int main() {
     double tempo_total; /* segundos */
@@ -23,7 +24,10 @@ int main() {
             tempo_total = b(t, r, p, k);
             break;
         case 'C':
-            tempo_total = b(t, r, p, k);
+            tempo_total = c(t, r, p, k);
+            break;
+        case 'D':
+            tempo_total = c(t, r, p, k);
             break;
     }
 
@@ -62,5 +66,13 @@ float c(double t, int r, int p, int k) {
 
     scanf("%d", &q);
     
-    return handshake + pacotes;
+    return handshake + (((pacotes/q)-1)*rtt) + (1 * (rtt/2));
+}
+
+float d(double t, int r, int p, int k) {
+    double rtt = r*pow(10, -3);
+    double handshake = k*rtt;
+    int pacotes = t / (p*pow(10, -3));
+    
+    return handshake + (((pacotes/q)-1)*rtt) + (1 * (rtt/2));
 }
