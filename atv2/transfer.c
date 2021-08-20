@@ -73,20 +73,13 @@ float d(double t, int r, int p, int k) {
     double rtt = r*pow(10, -3);
     double handshake = k*rtt;
     int pacotes = (t / (p*pow(10, -3))) - 1;
-    double s = 0;
-    int toSend;
-    int d2 = 500;
-    int count = 1;
+    int d2 = 1;
+    int count = 0;
 
     while(pacotes > 0) {
         pacotes -= d2;
-        toSend = d2 > pacotes ? d2+pacotes : d2;
-        s += toSend*rtt;
-        count++;
         d2 *= 2;
-        
-        printf("to send %d, at %f\n", toSend, s);
-    }
 
-    return handshake + s + (1 * (rtt/2));
+        count++;
+    }
 }
