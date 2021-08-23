@@ -6,15 +6,17 @@ char *step1(char **cod);
 int *step2(char *msg);
 int *step3(int *msg2);
 
-void nrz(int length, int *msg) {
+void nrz(char *cod, int length, int *msg) {
   char arr[8];
-  for (int i = 0; i < length; i++) {
+
+  printf("%s %d ", cod, length*8);
+  for (int i = 1; i < length+1; i++) {
     for (int j = 7; j >= 0; j--) {
       arr[j] = (msg[i] % 10) == 1 ? 'A' : 'B';
       msg[i] /= 10;
     }
 
-    printf("%s ", arr);
+    printf("%s", arr);
   }
 }
 
@@ -27,7 +29,7 @@ int main() {
   printf("c: %s\n", cod);
 
   if (strcmp(cod, "NRZ") == 0) {
-    nrz(msg2[0]+1, msg3);
+    nrz(cod, msg2[0], msg3);
   }
 
   printf("\n");
