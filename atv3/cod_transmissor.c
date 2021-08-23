@@ -2,6 +2,43 @@
 #include <stdlib.h>
 #include <string.h>
 
+char *step1(char **cod);
+int *step2(char *msg);
+int *step3(int *msg2);
+
+void nrz(int length, int *msg) {
+  char arr[8];
+  for (int i = 0; i < length; i++) {
+    for (int j = 7; j >= 0; j--) {
+      arr[j] = (msg[i] % 10) == 1 ? 'A' : 'B';
+      msg[i] /= 10;
+    }
+
+    printf("%s ", arr);
+  }
+}
+
+int main() {
+  char *cod;
+  char *msg = step1(&cod);
+  int *msg2 = step2(msg);
+  int *msg3 = step3(msg2);
+
+  printf("c: %s\n", cod);
+
+  if (strcmp(cod, "NRZ") == 0) {
+    nrz(msg2[0]+1, msg3);
+  }
+
+  printf("\n");
+
+  free(cod);
+  free(msg);
+  free(msg2);
+  free(msg3);
+  return 0;
+}
+
 char *step1(char **cod) {
   char *msg;
   char *c;
@@ -46,34 +83,4 @@ int *step3(int *msg2) {
   }
 
   return msg3;
-}
-
-int main() {
-  char *cod;
-  char *msg = step1(&cod);
-  int *msg2 = step2(msg);
-  int *msg3 = step3(msg2);
-  char arr[8];
-  int i = 0;
-
-  printf("c: %s\n", cod);
-
-  for (i; i < msg2[0] + 1; i++) {
-
-    for (int j = 0; j < 8; j++) {
-      arr[j] = (msg3[i]%10) == 1 ? 'A' : 'B';
-      msg3[i] /= 10;
-    }
-
-    printf("%s ", arr);
-
-    /*printf("%d\n", msg3[i] % 10);
-    printf("%d\n ", msg3[i]);*/
-  }
-
-  free(cod);
-  free(msg);
-  free(msg2);
-  free(msg3);
-  return 0;
 }
