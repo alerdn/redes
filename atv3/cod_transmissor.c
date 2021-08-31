@@ -25,17 +25,19 @@ void manchester(char *cod, char k, int length, int *msg) {
 
   printf("%s %c %d ", cod, k, length * 16);
   for (int i = 1; i <= length; i++) {
-    for (int j = 15; j >= 0; j--) {
+    for (int j = 16; j > 0; j = j - 2) {
 
-      arr[j] = ((msg[i] % 10) == 1 ? 'A' : (k == 'A' ? 'A' : 'B'));
+      arr[j-2] = ((msg[i] % 10) == 1 ? (k == 'A' ? 'B' : 'A') : (k == 'A' ? 'A' : 'B'));
       k = (k == 'A' ? 'B' : 'A');
-      //k = (k == 'A' ? 'B' : 'A');
+      arr[j-1] = ((msg[i] % 10) == 1 ? (k == 'A' ? 'B' : 'A') : (k == 'A' ? 'A' : 'B'));
+      k = (k == 'A' ? 'B' : 'A');
 
       msg[i] /= 10;
-      printf("%d\n", j);
     }
 
-    printf("%s\n", arr);
+    for (int i = 0; i < 16; i++) {
+      printf("%c", arr[i]);
+    }
   }
 }
 
@@ -95,8 +97,7 @@ int *step3(int *msg2) {
   int length = msg2[0] + 1;
   int *msg3 = (int *)malloc(sizeof(int) * length);
 
-  int i = 0;
-  for (i; i < length; i++) {
+  for (int i = 0; i < length; i++) {
     int d = msg2[i];
     int resp = 0;
     int m10 = 1;
