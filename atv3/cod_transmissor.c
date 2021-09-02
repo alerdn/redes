@@ -27,9 +27,11 @@ void manchester(char *cod, char k, int length, int *msg) {
   for (int i = 1; i <= length; i++) {
     for (int j = 16; j > 0; j = j - 2) {
 
-      arr[j-2] = ((msg[i] % 10) == 1 ? (k == 'A' ? 'B' : 'A') : (k == 'A' ? 'A' : 'B'));
+      arr[j - 2] = ((msg[i] % 10) == 1 ? (k == 'A' ? 'B' : 'A')
+                                       : (k == 'A' ? 'A' : 'B'));
       k = (k == 'A' ? 'B' : 'A');
-      arr[j-1] = ((msg[i] % 10) == 1 ? (k == 'A' ? 'B' : 'A') : (k == 'A' ? 'A' : 'B'));
+      arr[j - 1] = ((msg[i] % 10) == 1 ? (k == 'A' ? 'B' : 'A')
+                                       : (k == 'A' ? 'A' : 'B'));
       k = (k == 'A' ? 'B' : 'A');
 
       msg[i] /= 10;
@@ -38,6 +40,48 @@ void manchester(char *cod, char k, int length, int *msg) {
     for (int i = 0; i < 16; i++) {
       printf("%c", arr[i]);
     }
+  }
+}
+
+void fourb5b(char *cod, int length, int *msg) {
+  char arr[10];
+  char part[5];
+
+  char *fourb[16] = {"0000", "0001", "0010", "0011", "0100", "0101",
+                     "0110", "0111", "1000", "1001", "1010", "1011",
+                     "1100", "1101", "1110", "1111"};
+
+  char *fiveb[16] = {"11110", "01001", "10100", "10101", "01010", "01011",
+                     "01110", "01111", "10010", "10011", "10110", "10111",
+                     "11010", "11011", "11100", "11101"};
+
+  printf("%s %d ", cod, length * 10);
+  for (int i = 1; i <= length; i++) {
+
+    for (int k = 1; k >= 0; k--) {
+
+      for (int j = 3; j >= 0; j--) {
+
+        part[j] = (msg[i] % 10) + 48;
+
+        msg[i] /= 10;
+      }
+      part[4] = '\0';    
+
+      for (int l = 0; l < 16; l++) {
+
+        if (strcmp(part, fourb[l]) == 0) {
+          strcpy(&arr[3 * k], fiveb[l]);
+        }
+      }
+
+    }
+
+    for (int i = 0; i < 10; i++) {
+      arr[i] = arr[i] == '1' ? 'A' : 'B';
+    }
+
+    printf("%s", arr);
   }
 }
 
@@ -54,6 +98,8 @@ int main() {
     nrz(cod, msg2[0], msg3);
   } else if (strcmp(cod, "Manchester") == 0) {
     manchester(cod, k, msg2[0], msg3);
+  } else if (strcmp(cod, "4b5b") == 0) {
+    fourb5b(cod, msg2[0], msg3);
   }
 
   printf("\n");
