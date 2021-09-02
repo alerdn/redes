@@ -44,7 +44,7 @@ void manchester(char *cod, char k, int length, int *msg) {
 }
 
 void fourb5b(char *cod, int length, int *msg) {
-  char arr[10];
+  char arr[11];
   char part[5];
 
   char *fourb[16] = {"0000", "0001", "0010", "0011", "0100", "0101",
@@ -62,19 +62,23 @@ void fourb5b(char *cod, int length, int *msg) {
 
       for (int j = 3; j >= 0; j--) {
 
+        // Transformando int em char de acordo com a tabela ASCII | 1 => '1'
         part[j] = (msg[i] % 10) + 48;
 
         msg[i] /= 10;
       }
-      part[4] = '\0';    
+      part[4] = '\0';
 
       for (int l = 0; l < 16; l++) {
-
         if (strcmp(part, fourb[l]) == 0) {
-          strcpy(&arr[3 * k], fiveb[l]);
+
+          for (int p = 0; p < 5; p++) {
+            arr[(5 * k) + p] = fiveb[l][p];
+          }
+
+          break;
         }
       }
-
     }
 
     for (int i = 0; i < 10; i++) {
@@ -92,8 +96,6 @@ int main() {
   int *msg2 = step2(msg);
   int *msg3 = step3(msg2);
 
-  printf("c: %s\nk: %c\n", cod, k);
-
   if (strcmp(cod, "NRZ") == 0) {
     nrz(cod, msg2[0], msg3);
   } else if (strcmp(cod, "Manchester") == 0) {
@@ -101,8 +103,6 @@ int main() {
   } else if (strcmp(cod, "4b5b") == 0) {
     fourb5b(cod, msg2[0], msg3);
   }
-
-  printf("\n");
 
   free(cod);
   free(msg);
