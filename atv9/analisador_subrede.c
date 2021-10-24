@@ -45,6 +45,16 @@ char *decToBin(int *oct) {
   return retorno;
 }
 
+int convertBit(bit, x) {
+  int result = 0;
+  int i;
+  for (i = 0; i < x; i++) {
+    result += pow(2, i);
+  }
+
+  return result;
+}
+
 int main() {
   char *ip = (char *)malloc(sizeof(char *) * 80);
   int hosts;
@@ -71,11 +81,11 @@ int main() {
   }
 
   for (j = 8*(octHosts-1); j < octHosts * 8; j++) {
-    printf("%d: - pow: %f - hosts: %d\n", j, pow(2, j), hosts);
     if (pow(2, j) > hosts) break;
   }
   j -= 8*(octHosts-1);
   printf("j: %d\n", j);
+
   /* Endereço informado */
   printf("Endereço informado: ");
   for (i = 0; i < 4; i++) {
@@ -90,7 +100,7 @@ int main() {
   printf("Máscara da sub-rede: ");
   for (i = 0; i < 4; i++) {
     oct[i] = (4 - i) <= octHosts ? 0 : 255;
-    oct[4 - octHosts] = pow(2, j) - 1 - 255;
+    oct[4 - octHosts] = 255 - convertBit(2, j);
     printf("%d", oct[i]);
     if (i < 4 - 1)
       printf(".");
@@ -111,7 +121,7 @@ int main() {
   printf("End. broadcast da sub-rede: ");
   for (i = 0; i < 4; i++) {
     oct[i] = (4 - i) <= octHosts ? 255 : octetos[i];
-    oct[4 - octHosts] = pow(2, j) - 1;
+    oct[4 - octHosts] = convertBit(2, j);
     printf("%d", oct[i]);
     if (i < 4 - 1)
       printf(".");
