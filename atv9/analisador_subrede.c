@@ -1,9 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 char *decToBin(int *oct) {
-  int d, i;
+  int d, i, j;
   int resp;
   int m10;
   int aux;
@@ -26,15 +27,16 @@ char *decToBin(int *oct) {
     sprintf(respChar, "%d", resp);
 
     aux = 8 - strlen(respChar);
-    for (i = 0; i < aux; i++) {
+    for (j = 0; j < aux; j++) {
       strcat(auxChar, "0");
     }
     strcat(auxChar, respChar);
 
     strcat(retorno, auxChar);
 
-    if (i < 7)
+    if (i < 3) {
       strcat(retorno, " ");
+    }
 
     strcpy(respChar, "");
     strcpy(auxChar, "");
@@ -50,7 +52,7 @@ int main() {
   int oct[4];
   int octHosts;
   char *ptr;
-  int i;
+  int i, j;
 
   scanf("%s %d", ip, &hosts);
 
@@ -68,6 +70,12 @@ int main() {
     octHosts = 3;
   }
 
+  for (j = 8*(octHosts-1); j < octHosts * 8; j++) {
+    printf("%d: - pow: %f - hosts: %d\n", j, pow(2, j), hosts);
+    if (pow(2, j) > hosts) break;
+  }
+  j -= 8*(octHosts-1);
+  printf("j: %d\n", j);
   /* Endereço informado */
   printf("Endereço informado: ");
   for (i = 0; i < 4; i++) {
@@ -82,6 +90,7 @@ int main() {
   printf("Máscara da sub-rede: ");
   for (i = 0; i < 4; i++) {
     oct[i] = (4 - i) <= octHosts ? 0 : 255;
+    oct[4 - octHosts] = 255 - pow(2, j) - 1;
     printf("%d", oct[i]);
     if (i < 4 - 1)
       printf(".");
@@ -102,6 +111,7 @@ int main() {
   printf("End. broadcast da sub-rede: ");
   for (i = 0; i < 4; i++) {
     oct[i] = (4 - i) <= octHosts ? 255 : octetos[i];
+    oct[4 - octHosts] = pow(2, j) - 1;
     printf("%d", oct[i]);
     if (i < 4 - 1)
       printf(".");
