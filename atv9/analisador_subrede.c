@@ -90,7 +90,7 @@ int main() {
   printf("Máscara da sub-rede: ");
   for (i = 0; i < 4; i++) {
     oct[i] = (4 - i) <= octHosts ? 0 : 255;
-    oct[4 - octHosts] = 255 - pow(2, j) - 1;
+    oct[4 - octHosts] = pow(2, j) - 1 - 255;
     printf("%d", oct[i]);
     if (i < 4 - 1)
       printf(".");
