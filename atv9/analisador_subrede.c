@@ -117,7 +117,6 @@ int main() {
     if (pow(2, j) > hosts) break;
   }
   j -= 8*(octHosts-1);
-  printf("j: %d\nconvertBit(2, j): %d\n", j, convertBit(2, j));
 
   /* Endereço informado */
   printf("Endereço informado: ");
