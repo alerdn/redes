@@ -71,7 +71,7 @@ int and (int n1, int mask, int limit) {
   return resp;
 }
 
-int or (int n1, int mask, int limit) {
+int orMaskInvert (int n1, int mask, int limit) {
   int i;
   int resp = 0;
 
@@ -157,7 +157,7 @@ int main() {
   for (i = 0; i < 4; i++) {
     oct[i] = (4 - i) <= octHosts ? 255 : octetos[i];
     if (i == 4 - octHosts)
-      oct[4 - octHosts] = or(octetos[i], 255 - convertBit(2, j), 8-j);
+      oct[4 - octHosts] = orMaskInvert(octetos[i], 255 - convertBit(2, j), 8-j);
     printf("%d", oct[i]);
     if (i < 4 - 1)
       printf(".");
