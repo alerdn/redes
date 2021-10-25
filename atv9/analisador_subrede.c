@@ -63,7 +63,6 @@ int and (int n1, int mask, int limit) {
   char * maskc = decToBin(&mask, 1);
   
   for(i = 0; i < 8; i++) {
-    if (i == limit) break;
     if (nc1[i] == '1' && maskc[i] == '1') {
       resp += pow(2,7-i);
     }
@@ -78,12 +77,10 @@ int or (int n1, int mask, int limit) {
 
   char * nc1 = decToBin(&n1, 1);
   char * maskc = decToBin(&mask, 1);
-  /*printf("\n\n");*/
-  for(i = 0; i < limit; i++) {
-    /*printf("n1: %c - mask: %c - ", nc1[i+8-limit], maskc[i+8-limit]);*/
-    if (nc1[i+8-limit] == '1' || maskc[i+limit-1] == '1') {
-      resp += pow(2,limit-i-1);
-      /*printf("%d\n", resp);*/
+
+  for(i = 0; i < 8; i++) {
+    if (nc1[i] == '1' || maskc[i] == '0') {
+      resp += pow(2,7-i);
     }
   }
   return resp;
@@ -160,7 +157,7 @@ int main() {
   for (i = 0; i < 4; i++) {
     oct[i] = (4 - i) <= octHosts ? 255 : octetos[i];
     if (i == 4 - octHosts)
-      oct[4 - octHosts] = and(octetos[i], 255 - convertBit(2, j), 8-j) + or(octetos[i], convertBit(2, j), j);
+      oct[4 - octHosts] = or(octetos[i], 255 - convertBit(2, j), 8-j);
     printf("%d", oct[i]);
     if (i < 4 - 1)
       printf(".");
