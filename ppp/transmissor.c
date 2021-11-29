@@ -64,7 +64,7 @@ char *step3(int *msg2) {
   char *byte = (char *)malloc(sizeof(char *) * 9);
   int i, j;
 
-  for (i = 0; i < length; i++) {
+  for (i = 1; i < length; i++) {
     int d = msg2[i];
 
     for (j = 7; j >= 0; j--) {
@@ -75,33 +75,21 @@ char *step3(int *msg2) {
 
     strcat(msg3, byte);
     strcat(msg3, " ");
-
-    /*do {
-      resp += (d % 2) * m10;
-      m10 *= 10;
-      d /= 2;
-    } while (d != 0);
-
-    msg3[i] = resp;*/
   }
 
   return msg3;
 }
 
-char *fill(int msg) {
-  int i;
-  int count = 0;
-  while (msg != 0) {
-    count++;
-    msg /= 10;
-  }
+void esc(char *msg) {
+  char *dem = " ";
+  char * tk = strtok(msg, dem);
 
-  char *fillZero = (char *)malloc(sizeof(char) * 8 - count);
-  for (i = 0; i < 8 - count; i++) {
-    fillZero[i] = '0';
-  }
+  while (tk != NULL) {
+    printf("%s == 01111110 ? ", tk);
+    if(strcmp(tk, "01111110") == 0) printf("true\n"); else printf("false\n");
 
-  return fillZero;
+    tk = strtok(NULL, dem);
+  }
 }
 
 int main() {
@@ -123,15 +111,14 @@ int main() {
   printf("%s ", pr);
 
   // Mensagem
-
- // for (i = 1; i < msg2[0]; i++) {
-    //printf("%s", fill(msg3[i]));
-    printf("%s ", msg3);
-  //}
+  printf("%s ", msg3);
 
   printf("[checksum aqui] ");
 
   printf("%s ", flag);
+
+  printf("\n\n");
+  esc(msg3);
 
   free(hex);
   free(msg);
