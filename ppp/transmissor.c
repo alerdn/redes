@@ -80,21 +80,60 @@ char *step3(int *msg2) {
   return msg3;
 }
 
-void esc(char *msg) {
+void payload_corrigido(int len, char *msg) {
   char *dem = " ";
-  char * tk = strtok(msg, dem);
+  char flag[9] = "01111110\0";
+  char escape[9] = "01111101\0";
+
+  char *tk = strtok(msg, dem);
 
   while (tk != NULL) {
-    printf("%s == 01111110 ? ", tk);
-    if(strcmp(tk, "01111110") == 0) printf("true\n"); else printf("false\n");
+    if(strcmp(tk, flag) == 0) {
+      printf("%s %s", escape, tk); 
+    } else if (strcmp(tk, escape) == 0) { 
+      printf("%s %s", escape, tk); 
+    } else {
+       printf("%s ", tk); 
+    }
 
     tk = strtok(NULL, dem);
   }
 }
 
+int convert(char *msg) {
+  char *dem = " ";
+  char *tk = strtok(msg, dem);
+
+  int dec = 0;
+
+  while (tk != NULL) {
+    int d2 = 1;
+    int num = 0;
+
+    int i;
+    for (i = 7; i >= 0; i--) {
+      num += (tk[i] - 48) * d2;
+      d2 *= 2;
+    }
+
+    dec += num;
+
+    tk = strtok(NULL, dem);
+  }
+
+  return dec;
+}
+
+void checksum(char *address, char *control, char *protocol, char *msg) {
+  printf("%d\n", convert(address));
+  printf("%d\n", convert(control));
+  printf("%d\n", convert(protocol));
+  printf("%d\n", convert(msg));
+}
+
 int main() {
   char flag[9] = "01111110\0";
-  char adress[9] = "11111111\0";
+  char address[9] = "11111111\0";
   char control[9] = "00000011\0";
 
   char *hex = (char *)malloc(sizeof(char *) * 4);
@@ -106,19 +145,19 @@ int main() {
   char *pr = protocol(hex);
 
   printf("%s ", flag);
-  printf("%s ", adress);
+  printf("%s ", address);
   printf("%s ", control);
   printf("%s ", pr);
 
-  // Mensagem
-  printf("%s ", msg3);
+  // Mensagem  
+  payload_corrigido(msg2[0]+1, msg3);
 
   printf("[checksum aqui] ");
 
   printf("%s ", flag);
 
   printf("\n\n");
-  esc(msg3);
+  checksum(address, control, pr, msg3);
 
   free(hex);
   free(msg);
