@@ -11,7 +11,6 @@ char *protocol(char *hex) {
 
   int i;
   for (i = len - 1; i >= 0; i--) {
-    printf("hex[%d]: %c\n", i, hex[i]);
     if (hex[i] >= '0' && hex[i] <= '9') {
       dec_val += (hex[i] - 48) * base;
       base = base * 16;
@@ -21,8 +20,6 @@ char *protocol(char *hex) {
     }
   }
 
-  printf("dec_val: %d\n", dec_val);
-
   for (i = 16; i >= 0; i--) {
     if (i == 8) {
       resp[i] = ' ';
@@ -30,12 +27,9 @@ char *protocol(char *hex) {
     }
 
     resp[i] = (dec_val % 2) + 48;
-    printf("(%d mod 2) + 48: [resp[%d]] %c\n", dec_val, i, resp[i]);
     dec_val /= 2;
   }
   resp[17] = '\0';
-
-  // printf("%s", resp);
 
   return resp;
 }
@@ -64,27 +58,37 @@ int *step2(char *msg) {
   return msg2;
 }
 
-int *step3(int *msg2) {
+char *step3(int *msg2) {
   int length = msg2[0] + 1;
-  int *msg3 = (int *)malloc(sizeof(int) * length);
+  char *msg3 = (char *)malloc(sizeof(char *) * length * 9);
+  char *byte = (char *)malloc(sizeof(char *) * 9);
+  int i, j;
 
-  for (int i = 0; i < length; i++) {
+  for (i = 0; i < length; i++) {
     int d = msg2[i];
-    int resp = 0;
-    int m10 = 1;
-    do {
+
+    for (j = 7; j >= 0; j--) {
+      byte[j] = (d % 2) + 48;
+      d /= 2;
+    }
+    byte[8] = '\0';
+
+    strcat(msg3, byte);
+    strcat(msg3, " ");
+
+    /*do {
       resp += (d % 2) * m10;
       m10 *= 10;
       d /= 2;
     } while (d != 0);
 
-    msg3[i] = resp;
+    msg3[i] = resp;*/
   }
 
   return msg3;
 }
 
-char * fill(int msg) {
+char *fill(int msg) {
   int i;
   int count = 0;
   while (msg != 0) {
@@ -92,7 +96,7 @@ char * fill(int msg) {
     msg /= 10;
   }
 
-  char * fillZero = (char *)malloc(sizeof(char) * 8 - count);
+  char *fillZero = (char *)malloc(sizeof(char) * 8 - count);
   for (i = 0; i < 8 - count; i++) {
     fillZero[i] = '0';
   }
@@ -109,10 +113,9 @@ int main() {
 
   char *msg = step1(hex);
   int *msg2 = step2(msg);
-  int *msg3 = step3(msg2);
+  char *msg3 = step3(msg2);
 
   char *pr = protocol(hex);
-  int i;
 
   printf("%s ", flag);
   printf("%s ", adress);
@@ -121,10 +124,10 @@ int main() {
 
   // Mensagem
 
-  for (i = 1; i < msg2[0]; i++) {
-    printf("%s", fill(msg3[i]));
-    printf("%d ", msg3[i]);
-  }
+ // for (i = 1; i < msg2[0]; i++) {
+    //printf("%s", fill(msg3[i]));
+    printf("%s ", msg3);
+  //}
 
   printf("[checksum aqui] ");
 
