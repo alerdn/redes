@@ -84,6 +84,22 @@ int *step3(int *msg2) {
   return msg3;
 }
 
+char * fill(int msg) {
+  int i;
+  int count = 0;
+  while (msg != 0) {
+    count++;
+    msg /= 10;
+  }
+
+  char * fillZero = (char *)malloc(sizeof(char) * 8 - count);
+  for (i = 0; i < 8 - count; i++) {
+    fillZero[i] = '0';
+  }
+
+  return fillZero;
+}
+
 int main() {
   char flag[9] = "01111110\0";
   char adress[9] = "11111111\0";
@@ -104,7 +120,9 @@ int main() {
   printf("%s ", pr);
 
   // Mensagem
+
   for (i = 1; i < msg2[0]; i++) {
+    printf("%s", fill(msg3[i]));
     printf("%d ", msg3[i]);
   }
 
