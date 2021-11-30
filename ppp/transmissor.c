@@ -80,12 +80,15 @@ char *step3(int *msg2) {
   return msg3;
 }
 
-void payload_corrigido(int len, char *msg) {
+void payload_corrigido(char *msg) {
   char *dem = " ";
   char flag[9] = "01111110\0";
   char escape[9] = "01111101\0";
 
-  char *tk = strtok(msg, dem);
+  char *cpy = (char*)malloc(sizeof(char*)*strlen(msg));
+  strcpy(cpy, msg);
+
+  char *tk = strtok(cpy, dem);
 
   while (tk != NULL) {
     if(strcmp(tk, flag) == 0) {
@@ -124,11 +127,48 @@ int convert(char *msg) {
   return dec;
 }
 
-void checksum(char *address, char *control, char *protocol, char *msg) {
-  printf("%d\n", convert(address));
-  printf("%d\n", convert(control));
-  printf("%d\n", convert(protocol));
-  printf("%d\n", convert(msg));
+void checksum(char *address, char *control, char *protocol, char *msg, int bytes_msg) {
+  char *dem = " ";
+  char *bytes_soma = (char*)malloc(sizeof(char*) * 16);
+  int len =  strlen(address) + strlen(control) + strlen(protocol) + strlen(msg);
+  
+  // +3 espaços em branco; +8 para zeros ao fim, se precisar.
+  char *bytes = (char*)malloc(sizeof(char*) * (len + 11));
+
+  strcpy(bytes, address);
+  strcat(bytes, " ");
+
+  strcat(bytes, control);
+  strcat(bytes, " ");
+
+  strcat(bytes, protocol);
+  strcat(bytes, " ");
+
+  strcat(bytes, msg);
+
+  printf("bytes msg: %d\n", bytes_msg);
+  if (bytes_msg % 2 != 0) {
+    strcat(bytes, "00000000");
+  }
+
+  printf("%s\n", bytes);
+
+  char *tk = strtok(bytes, dem);
+  int count = 1;
+
+  while (tk != NULL) {
+    if (count % 2 != 0) {
+      bytes_soma = tk;
+      count++;
+    } else {
+      strcat(bytes_soma, tk);
+      count--;
+
+      printf("bytes soma: %s\n", bytes_soma);
+    }
+
+    tk = strtok(NULL, dem);
+  }
 }
 
 int main() {
@@ -150,14 +190,14 @@ int main() {
   printf("%s ", pr);
 
   // Mensagem  
-  payload_corrigido(msg2[0]+1, msg3);
+  payload_corrigido(msg3);
 
   printf("[checksum aqui] ");
 
   printf("%s ", flag);
 
   printf("\n\n");
-  checksum(address, control, pr, msg3);
+  checksum(address, control, pr, msg3, msg2[0]);
 
   free(hex);
   free(msg);
