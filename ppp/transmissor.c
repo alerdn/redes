@@ -84,11 +84,12 @@ void payload_corrigido(char *msg) {
   char *dem = " ";
   char flag[9] = "01111110\0";
   char escape[9] = "01111101\0";
+  char *tk = NULL;
 
   char *cpy = (char *)malloc(sizeof(char *) * strlen(msg));
   strcpy(cpy, msg);
 
-  char *tk = strtok(cpy, dem);
+  tk = strtok(cpy, dem);
 
   while (tk != NULL) {
     if (strcmp(tk, flag) == 0) {
@@ -103,74 +104,60 @@ void payload_corrigido(char *msg) {
   }
 }
 
-char sum(char *b1, char *b2, char *resp) {
+char sum(char **b1, char *b2, int vaiUm) {
   int i;
-  char vaiUm = '0';
+  char *resp = (char *)malloc(sizeof(char *) * 16);
 
   for (i = 15; i >= 0; i--) {
 
-    if (vaiUm == '0') {
+    int soma = vaiUm + (((*b1)[i]) - 48) + ((b2[i]) - 48);
 
-      if (b1[i] == '0') {
-
-        if (b2[i] == '0') {
-          resp[i] = '0';
-          vaiUm = '0';
-        } else if (b2[i] == '1') {
-          resp[i] = '1';
-          vaiUm = '0';
-        }
-
-      } else if (b1[i] == '1') {
-
-        if (b2[i] == '0') {
-          resp[i] = '1';
-          vaiUm = '0';
-        } else if (b2[i] == '1') {
-          resp[i] = '0';
-          vaiUm = '1';
-        }
-      }
-    } else if (vaiUm == '1') {
-
-      if (b1[i] == '0') {
-
-        if (b2[i] == '0') {
-          resp[i] = '1';
-          vaiUm = '0';
-        } else if (b2[i] == '1') {
-          resp[i] = '0';
-          vaiUm = '1';
-        }
-
-      } else if (b1[i] == '1') {
-
-        if (b2[i] == '0') {
-          resp[i] = '0';
-          vaiUm = '1';
-        } else if (b2[i] == '1') {
-          resp[i] = '1';
-          vaiUm = '1';
-        }
-      }
+    if (soma == 0) {
+      resp[i] = '0';
+      vaiUm = 0;
+    } else if (soma == 1) {
+      resp[i] = '1';
+      vaiUm = 0;
+    } else if (soma == 2) {
+      resp[i] = '0';
+      vaiUm = 1;
+    } else if (soma == 3) {
+      resp[i] = '1';
+      vaiUm = 1;
     }
   }
 
+  *b1 = resp;
+
   return vaiUm;
+}
+
+void complemento(char *resp) {
+  int i;
+  for (i = 0; i < 15; i++) {
+    if (i == 8)
+      printf(" ");
+    printf(resp[i] == '1' ? "0" : "1");
+  }
+  printf(" ");
 }
 
 void checksum(char *address, char *control, char *protocol, char *msg,
               int bytes_msg) {
   char *dem = " ";
+  char *resp = "0000000000000000\0";
+  char *byte_um = "0000000000000001\0";
 
   char *bytes_soma = (char *)malloc(sizeof(char *) * 16);
-  char *resp = (char *)malloc(sizeof(char *) * 16);
-  char *b1 = (char *)malloc(sizeof(char *) * 16);
-  char *b2 = (char *)malloc(sizeof(char *) * 16);
+
   int len = strlen(address) + strlen(control) + strlen(protocol) + strlen(msg);
 
-  // +3 espaços em branco; +8 para zeros ao fim, se precisar.
+  /* +3 espaços em branco; +8 para zeros ao fim, se precisar. */
   char *bytes = (char *)malloc(sizeof(char *) * (len + 11));
+
+  char *tk = NULL;
+  int count = 1;
+  int vaiUm = 0;
 
   strcpy(bytes, address);
   strcat(bytes, " ");
@@ -183,14 +170,11 @@ void checksum(char *address, char *control, char *protocol, char *msg,
 
   strcat(bytes, msg);
 
-  printf("bytes msg: %d\n", bytes_msg);
   if (bytes_msg % 2 != 0) {
     strcat(bytes, "00000000");
   }
 
-  char *tk = strtok(bytes, dem);
-  int count = 1;
-  int b = 1;
+  tk = strtok(bytes, dem);
 
   while (tk != NULL) {
     if (count == 1) {
@@ -200,24 +184,17 @@ void checksum(char *address, char *control, char *protocol, char *msg,
       strcat(bytes_soma, tk);
       count = 1;
 
-      if (b == 1) {
-        strcpy(b1, bytes_soma);
-        printf("  %s\n", b1);
-        b = 2;
-      } else {
-        strcpy(b2, bytes_soma);
-        printf("+ %s\n", b2);
-        b = 1;
-
-        sum(b1, b2, resp);
-
-        // não aparece a última soma pq não outros 2 bytes pra somar
-        printf("  %s\n\n", resp);
-      }
+      vaiUm = sum(&resp, bytes_soma, vaiUm);
     }
 
     tk = strtok(NULL, dem);
   }
+
+  if (vaiUm == 1) {
+    vaiUm = sum(&resp, byte_um, 0);
+  }
+
+  complemento(resp);
 }
 
 int main() {
@@ -238,15 +215,12 @@ int main() {
   printf("%s ", control);
   printf("%s ", pr);
 
-  // Mensagem
+  /* Mensagem */
   payload_corrigido(msg3);
 
-  printf("[checksum aqui] ");
+  checksum(address, control, pr, msg3, msg2[0]);
 
   printf("%s ", flag);
-
-  printf("\n\n");
-  checksum(address, control, pr, msg3, msg2[0]);
 
   free(hex);
   free(msg);
