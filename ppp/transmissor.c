@@ -59,7 +59,7 @@ int *step2(char *msg) {
 }
 
 char *step3(int *msg2) {
-  int length = msg2[0] + 1;
+  int length = msg2[0]+1;
   char *msg3 = (char *)malloc(sizeof(char *) * length * 9);
   char *byte = (char *)malloc(sizeof(char *) * 9);
   int i, j;
@@ -82,8 +82,8 @@ char *step3(int *msg2) {
 
 void payload_corrigido(char *msg) {
   char *dem = " ";
-  char flag[9] = "01111110\0";
-  char escape[9] = "01111101\0";
+  char *flag = "01111110\0";
+  char *escape = "01111101\0";
   char *tk = NULL;
 
   char *cpy = (char *)malloc(sizeof(char *) * strlen(msg));
@@ -93,9 +93,9 @@ void payload_corrigido(char *msg) {
 
   while (tk != NULL) {
     if (strcmp(tk, flag) == 0) {
-      printf("%s %s", escape, tk);
+      printf("%s %s ", escape, tk);
     } else if (strcmp(tk, escape) == 0) {
-      printf("%s %s", escape, tk);
+      printf("%s %s ", escape, tk);
     } else {
       printf("%s ", tk);
     }
@@ -134,7 +134,7 @@ char sum(char **b1, char *b2, int vaiUm) {
 
 void complemento(char *resp) {
   int i;
-  for (i = 0; i < 15; i++) {
+  for (i = 0; i < 16; i++) {
     if (i == 8)
       printf(" ");
     printf(resp[i] == '1' ? "0" : "1");
@@ -220,7 +220,7 @@ int main() {
 
   checksum(address, control, pr, msg3, msg2[0]);
 
-  printf("%s ", flag);
+  printf("%s", flag);
 
   free(hex);
   free(msg);
