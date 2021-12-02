@@ -2,7 +2,18 @@
 #include <stdlib.h>
 #include <string.h>
 
-void normalizar_input(char **bytes, char ***bytes_normalizados) {
+void normalizar_input(char **bytes, char ***bytes_normalizados, int qtd_bytes) {
+  char *flag = "01111110\0";
+  char *escape = "01111101\0";
+ 
+  int i, j;
+  for (i = 1, j = 0; i < qtd_bytes; i++) {
+    if (strcmp(bytes[i-1], escape) == 0 || strcmp(bytes[i], flag) != 0) {
+      /*strcat((*bytes_normalizados)[j], bytes[i]);*/
+      printf("%s ",bytes[i]);
+      j++;
+    } else continue;
+  }
   (*bytes_normalizados) = bytes;
 }
 
@@ -34,45 +45,68 @@ char sum(char **b1, char *b2, int vaiUm) {
   return vaiUm;
 }
 
-char *checksum(char *address, char *control, char *protocol, char **data_bin,
-              int bytes_msg) {
+int checksum_verify(char *check_bin, char *address, char *control,
+                    char *protocol, char **data_bin, int bytes_msg) {
 
   char *dem = " ";
   char *resp = "0000000000000000\0";
   char *byte_um = "0000000000000001\0";
 
   char *bytes_soma = (char *)malloc(sizeof(char *) * 16);
-  char *msg = (char*)malloc(sizeof(char*) * bytes_msg * 9);
+  char *msg = (char *)malloc(sizeof(char *) * bytes_msg * 9);
+  char *check = (char *)malloc(sizeof(char *) * 17);
+  char *pr = (char *)malloc(sizeof(char *) * 17);
 
   int len;
   char *bytes;
   char *tk;
-  
+
   int count = 1;
   int vaiUm = 0;
 
-  int i;
+  int i, j;
+
+  strcpy(msg, "");
   for (i = 0; i < bytes_msg; i++) {
-    /*printf("%s ", data_bin[i]);*/
     strcat(msg, data_bin[i]);
     strcat(msg, " ");
   }
 
-  printf("%s ", msg);
+  for (i = 0, j = 0; i < 17; i++, j++) {
+    if (i == 8) {
+      check[i] = ' ';
+      i++;
+    }
+    check[i] = check_bin[j];
+  }
+  check[17] = '\0';
 
-  len = strlen(address) + strlen(control) + strlen(protocol) + strlen(msg);
+  for (i = 0, j = 0; i < 17; i++, j++) {
+    if (i == 8) {
+      pr[i] = ' ';
+      i++;
+    }
+    pr[i] = protocol[j];
+  }
+  pr[17] = '\0';
+
+  len = strlen(check) + strlen(address) + strlen(control) + strlen(pr) +
+        strlen(msg);
 
   bytes = (char *)malloc(sizeof(char *) * (len + 11));
 
   tk = NULL;
 
-  strcpy(bytes, address);
+  strcpy(bytes, check);
+  strcat(bytes, " ");
+
+  strcat(bytes, address);
   strcat(bytes, " ");
 
   strcat(bytes, control);
   strcat(bytes, " ");
 
-  strcat(bytes, protocol);
+  strcat(bytes, pr);
   strcat(bytes, " ");
 
   strcat(bytes, msg);
@@ -80,6 +114,8 @@ char *checksum(char *address, char *control, char *protocol, char **data_bin,
   if (bytes_msg % 2 != 0) {
     strcat(bytes, "00000000");
   }
+
+  printf("bytes %s", bytes);
 
   tk = strtok(bytes, dem);
 
@@ -101,10 +137,10 @@ char *checksum(char *address, char *control, char *protocol, char **data_bin,
     vaiUm = sum(&resp, byte_um, 0);
   }
 
-  return resp;
-}
+  printf("\nresp: %s\n", resp);
 
-int checksum_verify(char *check_bin) { return 0; }
+  return !strcmp(resp, "1111111111111111");
+}
 
 int binToDec(char *bin, int len) {
   int dec = 0;
@@ -141,25 +177,24 @@ char *binToHex(char *bin) {
 }
 
 char **substring(char **string, int qtd_bytes, int start, int end) {
-  char **resp = (char**)malloc(sizeof(char**) * (end - start));
+  char **resp = (char **)malloc(sizeof(char **) * (end - start));
 
   int i;
   for (i = start; i < end; i++) {
-    resp[i - start] = (char*)malloc(sizeof(char*) * 8);
+    resp[i - start] = (char *)malloc(sizeof(char *) * 8);
     strcpy(resp[i - start], string[i]);
   }
 
   return resp;
 }
 
-char * concat(char **bin, int len) {
-  char *resp = (char*)malloc(sizeof(char*) * len * 8);
+char *concat(char **bin, int len) {
+  char *resp = (char *)malloc(sizeof(char *) * len * 8);
   int i;
-  
+
   strcpy(resp, "");
   for (i = 0; i < len; i++) {
-    printf("%s ", bin[i]);
-    /*resp = bin[i];*/
+    strcat(resp, bin[i]);
   }
 
   return resp;
@@ -186,24 +221,27 @@ int main() {
     bytes[i][8] = '\0';
   }
 
-  normalizar_input(bytes, &bytes_normalizados);
+  normalizar_input(bytes, &bytes_normalizados, qtd_bytes);
 
-  address = binToDec(bytes_normalizados[1], 8);
-  control = binToDec(bytes_normalizados[2], 8);
-  
-  strcpy(pr, bytes_normalizados[3]);
-  strcat(pr, bytes_normalizados[4]);
+  address = binToDec(bytes_normalizados[0], 8);
+  control = binToDec(bytes_normalizados[1], 8);
+
+  strcpy(pr, bytes_normalizados[2]);
+  strcat(pr, bytes_normalizados[3]);
   protocol = binToHex(pr);
 
-  data_bin = substring(bytes_normalizados, qtd_bytes, 5, qtd_bytes - 2);
-  len = qtd_bytes - 2 - 5 + 1;
-  data = (char*)malloc(sizeof(char*) * len);
-  for (i = 0; i < 5; i++) {
+  data_bin = substring(bytes_normalizados, qtd_bytes, 4, qtd_bytes - 3);
+  len = qtd_bytes - 3 - 4 + 1;
+
+  data = (char *)malloc(sizeof(char *) * len);
+  for (i = 0; i < len - 1; i++) {
     data[i] = binToDec(data_bin[i], 8);
   }
   data[len] = '\0';
 
-  check_bin = concat(substring(bytes_normalizados, qtd_bytes, qtd_bytes - 3, qtd_bytes -1), 2);
+  check_bin = concat(
+      substring(bytes_normalizados, qtd_bytes, qtd_bytes - 3, qtd_bytes - 1),
+      2);
   check_hex = binToHex(check_bin);
 
   printf("| PPP Frame 0 control fields |\n");
@@ -215,7 +253,8 @@ int main() {
 
   printf("Data: %s\n", data);
 
-  if (checksum_verify(check_bin) == 1)
+  if (checksum_verify(check_bin, bytes_normalizados[0], bytes_normalizados[1],
+                      pr, data_bin, len - 1) == 1)
     printf("Data integrity: ok.\n");
   else
     printf("Data integrity: not ok.\n");
