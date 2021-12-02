@@ -54,7 +54,8 @@ int checksum_verify(char *check_bin, char *address, char *control,
   strcpy(msg, "");
   for (i = 0; i < bytes_msg; i++) {
     strcat(msg, data_bin[i]);
-    strcat(msg, " ");
+    if (i < bytes_msg - 1)
+      strcat(msg, " ");
   }
 
   for (i = 0, j = 0; i < 17; i++, j++) {
@@ -78,7 +79,7 @@ int checksum_verify(char *check_bin, char *address, char *control,
   len = strlen(check) + strlen(address) + strlen(control) + strlen(pr) +
         strlen(msg);
 
-  bytes = (char *)malloc(sizeof(char *) * (len + 11));
+  bytes = (char *)malloc(sizeof(char *) * (len + 12));
 
   tk = NULL;
 
@@ -97,7 +98,7 @@ int checksum_verify(char *check_bin, char *address, char *control,
   strcat(bytes, msg);
 
   if (bytes_msg % 2 != 0) {
-    strcat(bytes, "00000000");
+    strcat(bytes, " 00000000\0");
   }
 
   tk = strtok(bytes, dem);
@@ -111,6 +112,9 @@ int checksum_verify(char *check_bin, char *address, char *control,
       count = 1;
 
       vaiUm = sum(&resp, bytes_soma, vaiUm);
+
+      if (strcmp(resp, "1111111111111111") == 0)
+        return 1;
     }
 
     tk = strtok(NULL, dem);
@@ -181,8 +185,8 @@ char *concat(char **bin, int len) {
   return resp;
 }
 
-void normalizar_input(char ****bytes_normalizados, int *palavras,
-                      char **input, int *qtd_bytes, int *campos) {
+void normalizar_input(char ****bytes_normalizados, int *palavras, char **input,
+                      int *qtd_bytes, int *campos) {
   char *flag = "01111110\0";
   char *escape = "01111101\0";
   int in, j, i, k;
@@ -197,6 +201,7 @@ void normalizar_input(char ****bytes_normalizados, int *palavras,
       for (j = 0; j < 8; j++) {
         (*bytes_normalizados)[*palavras][campos[*palavras]][j] = input[i][j];
       }
+      (*bytes_normalizados)[*palavras][campos[*palavras]][8] = '\0';
       k++;
       campos[*palavras] = campos[*palavras] + 1;
     } else {
@@ -221,8 +226,10 @@ void print(char **bytes_normalizados, int qtd_bytes, int campos, int index,
   char **data_bin;
   char *data;
   char *check_bin, *check_hex;
-  int len, i;
-  char *pr = (char*)malloc(sizeof(char*) * 16);
+  int len, i, k;
+  char *pr = (char *)malloc(sizeof(char *) * 16);
+
+  char *escape = "01111101\0";
 
   strcpy(pr, bytes_normalizados[2]);
   strcat(pr, bytes_normalizados[3]);
@@ -232,17 +239,26 @@ void print(char **bytes_normalizados, int qtd_bytes, int campos, int index,
   len = qtd_bytes - 2 - 4 + 1;
 
   data = (char *)malloc(sizeof(char *) * len);
-  for (i = 0; i < len - 1; i++) {
-    data[i] = binToDec(data_bin[i], 8);
+  for (i = 0, k = 0; i < len - 1; i++) {
+    if (strcmp(data_bin[i], escape) != 0) {
+      data[k] = binToDec(data_bin[i], 8);
+      k++;
+    } else {
+      if (strcmp(data_bin[i - 1], escape) == 0) {
+        data[k] = binToDec(data_bin[i], 8);
+        k++;
+      }
+    }
   }
+  
   data[len] = '\0';
 
   printf("| PPP Frame %d control fields |\n\n", index);
   printf("Address: %d\n\nControl: %d\n\nProtocol: %s\n\n", address, control,
          protocol);
 
-  check_bin = (char*)malloc(sizeof(char*) * 16);
-  check_hex = (char*)malloc(sizeof(char*) * 4);
+  check_bin = (char *)malloc(sizeof(char *) * 16);
+  check_hex = (char *)malloc(sizeof(char *) * 4);
   strcpy(check_bin, concat(substring(bytes_normalizados, qtd_bytes,
                                      qtd_bytes - 2, qtd_bytes),
                            2));
@@ -270,25 +286,26 @@ int main() {
   len = strlen(input);
   qtd_bytes = len / 8;
 
-  bytes = (char**)malloc(sizeof(char**) * 30000);
+  bytes = (char **)malloc(sizeof(char **) * 30000);
   for (i = 0; i < 30000; i++) {
-    bytes[i] = (char*)malloc(sizeof(char*) * 8);
+    bytes[i] = (char *)malloc(sizeof(char *) * 9);
   }
-
 
   for (i = 0; i < qtd_bytes; i++) {
     for (j = 0; j < 8; j++) {
       bytes[i][j] = input[j + (i * 8)];
     }
+    bytes[i][8] = '\0';
   }
 
   bytes_normalizados = (char ***)malloc(sizeof(char ***) * 30);
   for (i = 0; i < 30; i++) {
     bytes_normalizados[i] = (char **)malloc(sizeof(char **) * 30000);
     for (j = 0; j < 30000; j++) {
-      bytes_normalizados[i][j] = (char *)malloc(sizeof(char *) * 8);
+      bytes_normalizados[i][j] = (char *)malloc(sizeof(char *) * 9);
     }
   }
+
   normalizar_input(&bytes_normalizados, &palavras, bytes, &qtd_bytes, campos);
 
   for (i = 0; i < palavras; i++) {
