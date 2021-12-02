@@ -2,27 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-/*void normalizar_input(char **bytes, char bytes_normalizados[30][6251][8] , int
-*qtd_bytes) { char *flag = "01111110\0"; char *escape = "01111101\0";
-
-  int i, j, k;
-  for (i = 1, j = 0; i < (*qtd_bytes); i++) {
-    if (strcmp(bytes[i - 1], escape) == 0 || strcmp(bytes[i], flag) != 0) {
-      bytes_aux[j] = (char *)malloc(sizeof(char *) * 9);
-      for (k = 0; k < 8; k++) {
-        bytes_aux[j][k] = bytes[i][k];
-      }
-      bytes_aux[j][8] = '\0';
-      j++;
-    } else
-      continue;
-  }
-
-  *qtd_bytes = j;
-
-  return bytes_aux;
-}*/
-
 char sum(char **b1, char *b2, int vaiUm) {
   int i;
   char *resp = (char *)malloc(sizeof(char *) * 16);
@@ -203,7 +182,7 @@ char *concat(char **bin, int len) {
 }
 
 void normalizar_input(char ****bytes_normalizados, int *palavras,
-                      char input[30000][8], int *qtd_bytes, int *campos) {
+                      char **input, int *qtd_bytes, int *campos) {
   char *flag = "01111110\0";
   char *escape = "01111101\0";
   int in, j, i, k;
@@ -282,7 +261,7 @@ void print(char **bytes_normalizados, int qtd_bytes, int campos, int index,
 }
 
 int main() {
-  char bytes[30000][8], ***bytes_normalizados;
+  char **bytes, ***bytes_normalizados;
   char input[50000];
   int len, qtd_bytes, i, j, palavras = -1, campos[100];
 
@@ -290,6 +269,12 @@ int main() {
 
   len = strlen(input);
   qtd_bytes = len / 8;
+
+  bytes = (char**)malloc(sizeof(char**) * 30000);
+  for (i = 0; i < 30000; i++) {
+    bytes[i] = (char*)malloc(sizeof(char*) * 8);
+  }
+
 
   for (i = 0; i < qtd_bytes; i++) {
     for (j = 0; j < 8; j++) {
