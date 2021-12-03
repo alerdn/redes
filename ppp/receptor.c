@@ -65,7 +65,6 @@ int checksum_verify(char *check_bin, char *address, char *control,
     }
     check[i] = check_bin[j];
   }
-  check[17] = '\0';
 
   for (i = 0, j = 0; i < 17; i++, j++) {
     if (i == 8) {
@@ -74,12 +73,11 @@ int checksum_verify(char *check_bin, char *address, char *control,
     }
     pr[i] = protocol[j];
   }
-  pr[17] = '\0';
 
   len = strlen(check) + strlen(address) + strlen(control) + strlen(pr) +
         strlen(msg);
 
-  bytes = (char *)malloc(sizeof(char *) * (len + 12));
+  bytes = (char *)malloc(sizeof(char *) * (len + 3));
 
   tk = NULL;
 
@@ -105,16 +103,15 @@ int checksum_verify(char *check_bin, char *address, char *control,
 
   while (tk != NULL) {
     if (count == 1) {
-      bytes_soma = tk;
+      strcpy(bytes_soma, tk);
       count = 2;
     } else {
       strcat(bytes_soma, tk);
       count = 1;
 
+      /*printf("\n  %s\n+ %s", resp, bytes_soma);*/
       vaiUm = sum(&resp, bytes_soma, vaiUm);
-
-      if (strcmp(resp, "1111111111111111") == 0)
-        return 1;
+      /*printf("\n  %s\n", resp);*/
     }
 
     tk = strtok(NULL, dem);
@@ -141,7 +138,7 @@ int binToDec(char *bin, int len) {
 }
 
 char *binToHex(char *bin) {
-  char *resp = (char *)malloc(sizeof(char) * 5);
+  char *resp = (char *)malloc(sizeof(char) * 4);
 
   int dec = binToDec(bin, 16);
   int hex = 0;
@@ -161,7 +158,7 @@ char *binToHex(char *bin) {
   return resp;
 }
 
-char **substring(char **string, int qtd_bytes, int start, int end) {
+char **substring(char **string, int start, int end) {
   char **resp = (char **)malloc(sizeof(char **) * (end - start));
 
   int i;
@@ -189,7 +186,7 @@ void normalizar_input(char ****bytes_normalizados, int *palavras, char **input,
                       int *qtd_bytes, int *campos) {
   char *flag = "01111110\0";
   char *escape = "01111101\0";
-  int in, j, i, k;
+  int in, i, k;
 
   (*palavras)++;
   campos[*palavras] = 0;
@@ -198,12 +195,9 @@ void normalizar_input(char ****bytes_normalizados, int *palavras, char **input,
   for (i = 1, k = 0; i < (*qtd_bytes); i++) {
     if (strcmp(input[i - 1], escape) == 0 || strcmp(input[i], flag) != 0) {
       in = 0;
-      for (j = 0; j < 8; j++) {
-        (*bytes_normalizados)[*palavras][campos[*palavras]][j] = input[i][j];
-      }
-      (*bytes_normalizados)[*palavras][campos[*palavras]][8] = '\0';
-      k++;
+      strcpy((*bytes_normalizados)[*palavras][campos[*palavras]], input[i]);
       campos[*palavras] = campos[*palavras] + 1;
+      k++;
     } else {
       if (in == 0) {
         (*palavras)++;
@@ -226,7 +220,7 @@ void print(char **bytes_normalizados, int qtd_bytes, int campos, int index,
   char **data_bin;
   char *data;
   char *check_bin, *check_hex;
-  int len, i, k;
+  int len, i, k, check;
   char *pr = (char *)malloc(sizeof(char *) * 16);
 
   char *escape = "01111101\0";
@@ -235,7 +229,7 @@ void print(char **bytes_normalizados, int qtd_bytes, int campos, int index,
   strcat(pr, bytes_normalizados[3]);
   protocol = binToHex(pr);
 
-  data_bin = substring(bytes_normalizados, qtd_bytes, 4, qtd_bytes - 2);
+  data_bin = substring(bytes_normalizados, 4, qtd_bytes - 2);
   len = qtd_bytes - 2 - 4 + 1;
 
   data = (char *)malloc(sizeof(char *) * len);
@@ -250,30 +244,39 @@ void print(char **bytes_normalizados, int qtd_bytes, int campos, int index,
       }
     }
   }
-  
-  data[len] = '\0';
 
   printf("| PPP Frame %d control fields |\n\n", index);
   printf("Address: %d\n\nControl: %d\n\nProtocol: %s\n\n", address, control,
          protocol);
 
-  check_bin = (char *)malloc(sizeof(char *) * 16);
-  check_hex = (char *)malloc(sizeof(char *) * 4);
-  strcpy(check_bin, concat(substring(bytes_normalizados, qtd_bytes,
-                                     qtd_bytes - 2, qtd_bytes),
-                           2));
+  check_bin = (char *)malloc(sizeof(char *) * 17);
+  check_hex = (char *)malloc(sizeof(char *) * 5);
+
+  strcpy(check_bin,
+         concat(substring(bytes_normalizados, qtd_bytes - 2, qtd_bytes), 2));
+  check_bin[16] = '\0';
 
   strcpy(check_hex, binToHex(check_bin));
+  check_hex[4] = '\0';
 
   printf("Checksum: %s (Binary %s)\n\n", check_hex, check_bin);
 
   printf("Data: %s\n\n", data);
 
-  if (checksum_verify(check_bin, bytes_normalizados[0], bytes_normalizados[1],
-                      pr, data_bin, len - 1) == 1)
-    printf("Data integrity: ok.\n\n");
-  else
-    printf("Data integrity: not ok.\n\n");
+  check = checksum_verify(check_bin, bytes_normalizados[0],
+                          bytes_normalizados[1], pr, data_bin, len - 1);
+
+  if (index == palavras - 1) {
+    if (check == 1)
+      printf("Data integrity: ok.\n");
+    else
+      printf("Data integrity: not ok.\n");
+  } else {
+    if (check == 1)
+      printf("Data integrity: ok.\n\n");
+    else
+      printf("Data integrity: not ok.\n\n");
+  }
 }
 
 int main() {
@@ -311,5 +314,8 @@ int main() {
   for (i = 0; i < palavras; i++) {
     print(bytes_normalizados[i], qtd_bytes, campos[i], i, palavras);
   }
+
+  free(bytes);
+  free(bytes_normalizados);
   return 0;
 }
